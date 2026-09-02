@@ -181,6 +181,7 @@ async function activate(context) {
     phaseDeadline: 0
   };
   let tickInProgress = false;
+  let exerciseTimer = null;
 
   const updateStatus = () => renderStatus(statusBarItem, stats, exercise);
   updateStatus();
@@ -194,6 +195,13 @@ async function activate(context) {
     stats = createEmptyStats();
     await saveStats(context, stats);
     updateStatus();
+  };
+
+  const stopExerciseTimer = () => {
+    if (exerciseTimer !== null) {
+      clearInterval(exerciseTimer);
+      exerciseTimer = null;
+    }
   };
 
   /**
@@ -232,6 +240,7 @@ async function activate(context) {
             exercise.running = false;
             exercise.phase = 'tighten';
             exercise.phaseDeadline = 0;
+            stopExerciseTimer();
             break;
           }
           exercise.phase = 'relax';
@@ -252,10 +261,17 @@ async function activate(context) {
     exercise.running = true;
     exercise.phase = 'tighten';
     exercise.phaseDeadline = Date.now() + getPhaseDurationMs();
+    stopExerciseTimer();
+    exerciseTimer = setInterval(() => {
+      void tick().catch((error) => {
+        console.error('提肛小助手计时失败', error);
+      });
+    }, TICK_INTERVAL_MS);
     updateStatus();
   };
 
   const stopExercise = () => {
+    stopExerciseTimer();
     exercise.running = false;
     exercise.phase = 'tighten';
     exercise.phaseDeadline = 0;
@@ -277,11 +293,6 @@ async function activate(context) {
     vscode.window.showInformationMessage('今日练习统计已清零。');
   };
 
-  const timer = setInterval(() => {
-    void tick().catch((error) => {
-      console.error('提肛小助手计时失败', error);
-    });
-  }, TICK_INTERVAL_MS);
   const dayCheckTimer = setInterval(() => {
     void ensureToday().catch((error) => {
       console.error('提肛小助手日期检查失败', error);
@@ -303,7 +314,7 @@ async function activate(context) {
         updateStatus();
       }
     }),
-    { dispose: () => clearInterval(timer) },
+    { dispose: stopExerciseTimer },
     { dispose: () => clearInterval(dayCheckTimer) }
   );
 }
