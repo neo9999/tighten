@@ -5,7 +5,7 @@ const DAY_CHECK_INTERVAL_MS = 60 * 1000;
 const DEFAULT_REPETITIONS_PER_SET = 20;
 const DEFAULT_PHASE_DURATION_SECONDS = 4;
 const STATS_KEY = 'tigang-helper.dailyStats';
-const STATUS_BAR_EMOJI = '🧘';
+const STATUS_BAR_EMOJI = '🌼';
 
 /**
  * @typedef {Object} DailyStats
