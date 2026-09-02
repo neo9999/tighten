@@ -1,0 +1,52 @@
+{
+  "name": "tigang-helper",
+  "displayName": "提肛小助手",
+  "description": "在 VS Code 状态栏中进行可配置节奏的提肛练习计时和每日统计。",
+  "version": "0.0.1",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": ">=1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tigang-helper.toggle",
+        "title": "提肛小助手：开始/停止练习"
+      },
+      {
+        "command": "tigang-helper.resetToday",
+        "title": "提肛小助手：清零今日统计"
+      }
+    ],
+    "configuration": {
+      "title": "提肛小助手",
+      "properties": {
+        "tigangHelper.repetitionsPerSet": {
+          "type": "number",
+          "default": 20,
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "完成多少次收紧计为一组。"
+        },
+        "tigangHelper.phaseDurationSeconds": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 60,
+          "description": "每次收紧和放松持续多少秒。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "check": "node --check extension.js"
+  }
+}
