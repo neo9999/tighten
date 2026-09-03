@@ -5,7 +5,7 @@
 ## 主要功能
 
 - 点击右下角状态栏中的 `🌼` 开始或停止练习。
-- 默认节奏：收紧 4 秒 → 放松 4 秒。
+- 默认节奏：收紧 4 秒 → 放松 4 秒，两个阶段的时长可以分别配置。
 - 每完成一次收紧，今日次数加 1。
 - 默认每完成 20 次收紧计为 1 组，完成一组后自动停止。
 - 练习次数和组数会持久化保存，重启 VS Code 后仍然保留。
@@ -51,14 +51,16 @@
 | 配置项 | 默认值 | 范围 | 说明 |
 | --- | ---: | ---: | --- |
 | `tigangHelper.repetitionsPerSet` | 20 | 1–1000 | 完成多少次收紧计为一组 |
-| `tigangHelper.phaseDurationSeconds` | 4 | 1–60 | 每次收紧和放松持续的秒数 |
+| `tigangHelper.tightenDurationSeconds` | 4 | 1–60 | 每次收紧持续的秒数 |
+| `tigangHelper.relaxDurationSeconds` | 4 | 1–60 | 每次放松持续的秒数 |
 
 示例：
 
 ```json
 {
   "tigangHelper.repetitionsPerSet": 20,
-  "tigangHelper.phaseDurationSeconds": 4
+  "tigangHelper.tightenDurationSeconds": 4,
+  "tigangHelper.relaxDurationSeconds": 4
 }
 ```
 

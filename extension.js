@@ -3,7 +3,8 @@ const vscode = require('vscode');
 const TICK_INTERVAL_MS = 200;
 const DAY_CHECK_INTERVAL_MS = 60 * 1000;
 const DEFAULT_REPETITIONS_PER_SET = 20;
-const DEFAULT_PHASE_DURATION_SECONDS = 4;
+const DEFAULT_TIGHTEN_DURATION_SECONDS = 4;
+const DEFAULT_RELAX_DURATION_SECONDS = 4;
 const STATS_KEY = 'tigang-helper.dailyStats';
 const STATUS_BAR_EMOJI = '🌼';
 
@@ -78,15 +79,17 @@ function getRepetitionsPerSet() {
 }
 
 /**
+ * @param {string} settingName
+ * @param {number} defaultValue
  * @returns {number}
  */
-function getPhaseDurationSeconds() {
+function getConfiguredDurationSeconds(settingName, defaultValue) {
   const configured = vscode.workspace
     .getConfiguration('tigangHelper')
-    .get('phaseDurationSeconds', DEFAULT_PHASE_DURATION_SECONDS);
+    .get(settingName, defaultValue);
 
   if (typeof configured !== 'number' || !Number.isFinite(configured)) {
-    return DEFAULT_PHASE_DURATION_SECONDS;
+    return defaultValue;
   }
 
   return Math.max(1, Math.min(60, Math.floor(configured)));
@@ -95,8 +98,39 @@ function getPhaseDurationSeconds() {
 /**
  * @returns {number}
  */
-function getPhaseDurationMs() {
-  return getPhaseDurationSeconds() * 1000;
+function getTightenDurationSeconds() {
+  return getConfiguredDurationSeconds(
+    'tightenDurationSeconds',
+    DEFAULT_TIGHTEN_DURATION_SECONDS
+  );
+}
+
+/**
+ * @returns {number}
+ */
+function getRelaxDurationSeconds() {
+  return getConfiguredDurationSeconds(
+    'relaxDurationSeconds',
+    DEFAULT_RELAX_DURATION_SECONDS
+  );
+}
+
+/**
+ * @param {'tighten' | 'relax'} phase
+ * @returns {number}
+ */
+function getPhaseDurationSeconds(phase) {
+  return phase === 'tighten'
+    ? getTightenDurationSeconds()
+    : getRelaxDurationSeconds();
+}
+
+/**
+ * @param {'tighten' | 'relax'} phase
+ * @returns {number}
+ */
+function getPhaseDurationMs(phase) {
+  return getPhaseDurationSeconds(phase) * 1000;
 }
 
 /**
@@ -130,7 +164,8 @@ async function saveStats(context, stats) {
  */
 function renderStatus(statusBarItem, stats, exercise) {
   const countText = `${stats.contractions}次 · ${stats.sets}组`;
-  const phaseDurationSeconds = getPhaseDurationSeconds();
+  const tightenDurationSeconds = getTightenDurationSeconds();
+  const relaxDurationSeconds = getRelaxDurationSeconds();
   statusBarItem.text = STATUS_BAR_EMOJI;
 
   if (!exercise.running) {
@@ -139,7 +174,7 @@ function renderStatus(statusBarItem, stats, exercise) {
       `点击开始一组练习\n\n` +
       `今日：${stats.contractions} 次 · ${stats.sets} 组\n\n` +
       `每 ${getRepetitionsPerSet()} 次收紧计为 1 组\n\n` +
-      `收紧和放松各 ${phaseDurationSeconds} 秒\n\n` +
+      `节奏：收紧 ${tightenDurationSeconds} 秒 → 放松 ${relaxDurationSeconds} 秒\n\n` +
       `完成一组后自动停止`
     );
     return;
@@ -155,7 +190,7 @@ function renderStatus(statusBarItem, stats, exercise) {
     `**练习进行中**\n\n` +
     `当前：${phaseLabel}，剩余约 ${secondsRemaining} 秒\n\n` +
     `今日：${stats.contractions} 次 · ${stats.sets} 组\n\n` +
-    `节奏：收紧 ${phaseDurationSeconds} 秒 → 放松 ${phaseDurationSeconds} 秒\n\n` +
+    `节奏：收紧 ${tightenDurationSeconds} 秒 → 放松 ${relaxDurationSeconds} 秒\n\n` +
     `每 ${getRepetitionsPerSet()} 次收紧计为 1 组\n\n` +
     `完成一组后自动停止，点击可提前停止`
   );
@@ -247,7 +282,7 @@ async function activate(context) {
         } else {
           exercise.phase = 'tighten';
         }
-        exercise.phaseDeadline += getPhaseDurationMs();
+        exercise.phaseDeadline += getPhaseDurationMs(exercise.phase);
       }
 
       updateStatus();
@@ -260,7 +295,7 @@ async function activate(context) {
     await ensureToday();
     exercise.running = true;
     exercise.phase = 'tighten';
-    exercise.phaseDeadline = Date.now() + getPhaseDurationMs();
+    exercise.phaseDeadline = Date.now() + getPhaseDurationMs('tighten');
     stopExerciseTimer();
     exerciseTimer = setInterval(() => {
       void tick().catch((error) => {
@@ -309,7 +344,8 @@ async function activate(context) {
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (
         event.affectsConfiguration('tigangHelper.repetitionsPerSet') ||
-        event.affectsConfiguration('tigangHelper.phaseDurationSeconds')
+        event.affectsConfiguration('tigangHelper.tightenDurationSeconds') ||
+        event.affectsConfiguration('tigangHelper.relaxDurationSeconds')
       ) {
         updateStatus();
       }

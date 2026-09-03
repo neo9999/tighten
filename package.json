@@ -36,12 +36,19 @@
           "maximum": 1000,
           "description": "完成多少次收紧计为一组。"
         },
-        "tigangHelper.phaseDurationSeconds": {
+        "tigangHelper.tightenDurationSeconds": {
           "type": "number",
           "default": 4,
           "minimum": 1,
           "maximum": 60,
-          "description": "每次收紧和放松持续多少秒。"
+          "description": "每次收紧持续多少秒。"
+        },
+        "tigangHelper.relaxDurationSeconds": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 60,
+          "description": "每次放松持续多少秒。"
         }
       }
     }
